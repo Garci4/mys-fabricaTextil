@@ -42,20 +42,14 @@ class Balanza:
 
 class FabricaTextil:
   camiones = []
-  balanzas = []
+  balanza_planta = Balanza("Balanza Planta")
+  balanza_barraca = Balanza("Balanza Barraca")
 
   def __init__(self, max_camiones):
-    self._cargar_balanzas()
     for i in range(max_camiones-1):
       tipo_camion = random.randint(1,4)
       camion = Camion(i+1, tipo_camion, 0, 1)
       self.camiones.append(camion)
-
-  def _cargar_balanzas(self):
-    balanza_planta = Balanza("Balanza Planta")
-    balanza_barraca = Balanza("Balanza Barraca")
-    self.balanzas.append(balanza_planta)
-    self.balanzas.append(balanza_barraca)
 
 ft = FabricaTextil(20)
 print(ft.camiones[1].tipo)
