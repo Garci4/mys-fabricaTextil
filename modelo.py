@@ -31,21 +31,34 @@ class Balanza:
   def __init__(self, nombre):
     self.nombre = nombre
 
-  def encolar_camion(self):
+  def encolar_camion(self, camion):
     #aca se agrega un camion a la cola de camiones
+    self.cola_camiones.append(camion)
 
   def desencolar_camion(self):
-    #aca se quita un camion a la cola de camiones y se pone en camion_en_balanza
+    #aca se retorna el primer camion de la cola de camiones
+    try:
+      return self.cola_camiones.pop(0)
+    except:
+      print("La cola está vacía")
+      return None
 
   def cola_es_vacia(self):
-    #metodo que establece si la cola esta vacia
+    #metodo que indica si la cola esta vacia
+    return self.cola_camiones == []
+
+  def camion_a_balanza(self, camion):
+    self.camion_en_balanza = camion
+
 
 class FabricaTextil:
   camiones = []
-  balanza_planta = Balanza("Balanza Planta")
-  balanza_barraca = Balanza("Balanza Barraca")
+  balanza_planta = None
+  balanza_barraca = None
 
   def __init__(self, max_camiones):
+    self.balanza_planta = Balanza("Balanza Planta")
+    self.balanza_barraca = Balanza("Balanza Barraca")
     for i in range(max_camiones-1):
       tipo_camion = random.randint(1,4)
       camion = Camion(i+1, tipo_camion, 0, 1)
@@ -53,4 +66,5 @@ class FabricaTextil:
 
 ft = FabricaTextil(20)
 print(ft.camiones[1].tipo)
+print(ft.balanza_barraca.nombre)
 
