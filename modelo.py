@@ -23,8 +23,8 @@ class Camion:
     if estado in range(1,5):
       self.estado = self.ESTADO_CAMION[estado]
 
-  def cargar_pesos_sin_carga(self):
-    #aca se cargan los pesos de cada camión segun el tipo que le toco. Ver tabla 2
+  '''def cargar_pesos_sin_carga(self):
+    #aca se cargan los pesos de cada camión segun el tipo que le toco. Ver tabla 2'''
 
 class Balanza:
   nombre = None
@@ -51,7 +51,7 @@ class Balanza:
     return self.cola_camiones == []
 
   def balanza_esta_libre(self):
-    return self.cola_es_vacia() and self.camion_en_balanza = None
+    return self.cola_es_vacia() and self.camion_en_balanza == None
 
   def camion_a_balanza(self, camion):
     self.camion_en_balanza = camion
@@ -65,14 +65,11 @@ class FabricaTextil:
   def __init__(self, max_camiones):
     self.balanza_planta = Balanza("Balanza Planta")
     self.balanza_barraca = Balanza("Balanza Barraca")
-    for i in range(max_camiones-1):
+    for i in range(max_camiones):
       
       tipo_camion = random.randint(1,4) 
 
       camion = Camion(i+1, tipo_camion, 0, 1)
       self.camiones.append(camion)
 
-ft = FabricaTextil(20)
-print(ft.camiones[1].tipo)
-print(ft.balanza_barraca.nombre)
 
