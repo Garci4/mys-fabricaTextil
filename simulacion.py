@@ -10,11 +10,12 @@ from scipy.stats import expon
 TIPO_EVENTO = {
   '1': 'fin carga camion en barraca/inicio tiempo viaje',
   '2': 'inicio carga camion en barraca',
-  '3': 'fin de viaje a balanza planta/se encola o pasa derecho a balanza',
-  '4': '4',
-  '5': '5',
-  '6': '6',
-  '7': '7',
+  '3': 'fin de viaje a balanza planta/se encola',
+  '4': 'fin de viaje a balanza planta/pasa derecho a balanza', 
+  '5': 'esta encolado y pasa a balanza',
+  '6': 'fin de pesado en planta/inicio descarga en planta',
+  '7': 'fin de descarga en planta/...',
+  '8': ''
 }
 
 class Evento:
@@ -72,7 +73,7 @@ class Simulacion:
     if tipo_camion == 4:
       return norm.rvs(loc=49, scale=1.4)
 
-  #definimos cada evento
+  #definimos eventos iniciales de la simulacion
   def inicio_simulacion(self, camiones):
     #por cada camion, generar un evento que contemple el tiempo de carga de c/camion, mas el tiempo de pesaje en barraca
     #devolver lista de eventos
@@ -100,17 +101,10 @@ class Simulacion:
     if tipo_camion == 4:
       return round(norm.rvs(loc=38, scale=12.3))
 
-  ''' reloj += evento.cuando_ocurre
-          if evento.tipo == "":
-            #recalcular cual es el evento futuro
-            cuando ocurre = reloj + tiempo
-            #meter en eventos_futuros y reordenar por cuando_ocurre
-          if evento.tipo == "":
-          if evento.tipo == "":
-          if evento.tipo == "":
-          if evento.tipo == "":
-          if evento.tipo == "":
-          if evento.tipo == "":'''
+  def agregar_evento(self, evento):
+    self.eventos_futuros.append(_evento)
+    self.eventos_futuros.sort(key=lambda x: x.cuando_ocurre, reverse=False)
+
   def simular(self):
     self.eventos_futuros = self.inicio_simulacion(self.fabrica_textil.camiones)
     self.reloj = 0
@@ -124,18 +118,51 @@ class Simulacion:
             c = e.camion 
             tiempo_viaje = self.calcular_tiempo_viaje_camion(c.tipo)
             #print ("tiempo de viaje de evento camion %i = %i" % (c.nro_camion, tiempo_viaje))
-            _evento = Evento(c, self.reloj+tiempo_viaje, 3)
-            print (_evento.cuando_ocurre)
-            print (_evento)
-            self.eventos_futuros.append(_evento)
-            print ("antes")
-            print (self.eventos_futuros)
-            self.eventos_futuros.sort(key=lambda x: x.cuando_ocurre, reverse=False)
-            print ("desp")
-            print (self.eventos_futuros)
+            bp = self.fabrica_textil.balanza_planta
+            if bp.balanza_esta_libre():
+              _evento = Evento(c, self.reloj+tiempo_viaje, 4)
+            else:
+              _evento = Evento(c, self.reloj+tiempo_viaje, 3)
+            self.agregar_evento(_evento)
             #print (_evento.cuando_ocurre) 
-
-
-
+          if e.tipo == 2:
+            break
+          
+          #se encola en la balanza de planta  
+          if e.tipo == 3:
+            c = e.camion
+            bp = self.fabrica_textil.balanza_planta
+            bp.encolar_camion(c)
+          
+          #no se encola porque no hay nada en la cola, pasa derecho a la balanza
+          if e.tipo == 4:
+            c = e.camion
+            bp = self.fabrica_textil.balanza_planta
+            bp.camion_a_balanza(c)
+            tiempo_pesado = self.calcular_tiempo_pesaje_en_planta(bp.camion_en_balanza)
+            _evento = Evento(c, self.reloj+tiempo_pesado, 6)
+            self.agregar_evento(_evento)
+         
+          #está encolado y es su turno para pesarse
+          if e.tipo == 5:
+            c = e.camion
+            bp = self.fabrica_textil.balanza_planta
+            bp.camion_a_balanza(c)
+            tiempo_pesado = self.calcular_tiempo_pesaje_en_planta(bp.camion_en_balanza) 
+            _evento = Evento(c, self.reloj+tiempo_pesado, 6)
+            self.agregar_evento(_evento)
+          
+          #fin de pesado en planta y pasa a descargar en planta
+          #libero la balanza
+          if e.tipo == 6:
+            c = e.camion
+            bp = self.fabrica_textil.balanza_planta
+            if bp.cola_es_vacia() == False:
+              _evento = Evento(bp.desencolar_camion(), self.reloj, 5)
+              self.agregar_evento(_evento)
+            tiempo_descarga = self.calcular_demora_carga_camion(c.tipo)
+            _evento = Evento(c, self.reloj+tiempo_descarga, 7)
+            self.agregar_evento(_evento)
+            
 sim = Simulacion(3)
 sim.simular()
