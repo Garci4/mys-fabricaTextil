@@ -223,6 +223,8 @@ class Simulacion:
           self.print_eventos(self.eventos_futuros)
           print("corte")
 
+          
+
 
 sim = Simulacion(3)
 sim.simular()
