@@ -46,10 +46,16 @@ class Simulacion:
 
   #esta lista de eventos tiene que estar ordenada segun cuando_ocurre de menor a mayor
   eventos_futuros = []
+  materia_prima_ciclo_prod = 0  
+  producto_terminado = 0
 
   def __init__(self, nro_camiones):
     self.fabrica_textil = FabricaTextil(nro_camiones)
     self.reloj = 0
+
+  def agregar_evento(self, _evento):
+    self.eventos_futuros.append(_evento)
+    self.eventos_futuros.sort(key=lambda x: x.cuando_ocurre, reverse=False)
 
   #tabla 3
   def calcular_demora_carga_camion(self, tipo_camion):
@@ -101,9 +107,44 @@ class Simulacion:
     if tipo_camion == 4:
       return round(norm.rvs(loc=38, scale=12.3))
 
-  def agregar_evento(self, evento):
-    self.eventos_futuros.append(_evento)
-    self.eventos_futuros.sort(key=lambda x: x.cuando_ocurre, reverse=False)
+  #recibe un camion y devuelve el tiempo que tarda en pesarse en planta
+  def calcular_tiempo_pesaje_en_planta(self, camion):
+    return norm.rvs(loc=10, scale=3)
+
+  def peso_camion_sin_carga(self, tipo_camion):
+    if tipo_camion == 1:
+      return 31
+    if tipo_camion == 2:
+      return 25
+    if tipo_camion == 3:
+      return 37
+    if tipo_camion == 4:
+      return 45 
+
+  #metodo que imprime la lista de eventos en un formato que nos gusta
+  def print_eventos(self, eventos):
+          for i in eventos:
+            if i.camion is not None:
+              print("camion: %i - evento: %i - ocurre en: %i" %(i.camion.nro_camion, i.tipo, i.cuando_ocurre))
+            else:
+              print("99999999999 evento: %i - ocurre en: %i" %(i.tipo, i.cuando_ocurre))
+
+  def producir_producto_terminado(self, ahora):
+    if self.materia_prima_ciclo_prod >= 1.1:
+      self.materia_prima_ciclo_prod -= 1.1
+      demora = expon.rvs(scale=5)
+      print("demora %i" % (demora))
+      self.producto_terminado += 1
+      print ("reloj: ", ahora)
+      _evento = Evento(None, ahora+demora, 99)
+      self.agregar_evento(_evento)
+
+  def se_esta_produciendo(self):
+    for i in self.eventos_futuros:
+      if i.tipo == 99:
+        return True
+      else:
+        return False
 
   def simular(self):
     self.eventos_futuros = self.inicio_simulacion(self.fabrica_textil.camiones)
@@ -113,11 +154,14 @@ class Simulacion:
       for m in range(self.tope_reloj):
         while self.eventos_futuros != []:
           e = self.eventos_futuros.pop(0)
-          self.reloj += e.cuando_ocurre
+          self.reloj += (e.cuando_ocurre-self.reloj)
+          if e.tipo == 99:
+            self.producir_producto_terminado(self.reloj)
+            print("este ocurre en: ", e.cuando_ocurre)
           if e.tipo == 1:
             c = e.camion 
             tiempo_viaje = self.calcular_tiempo_viaje_camion(c.tipo)
-            #print ("tiempo de viaje de evento camion %i = %i" % (c.nro_camion, tiempo_viaje))
+            print ("tiempo de viaje de evento camion %i = %i" % (c.nro_camion, tiempo_viaje))
             bp = self.fabrica_textil.balanza_planta
             if bp.balanza_esta_libre():
               _evento = Evento(c, self.reloj+tiempo_viaje, 4)
@@ -163,6 +207,22 @@ class Simulacion:
             tiempo_descarga = self.calcular_demora_carga_camion(c.tipo)
             _evento = Evento(c, self.reloj+tiempo_descarga, 7)
             self.agregar_evento(_evento)
-            
+
+          #fin de descarga en planta
+          if e.tipo == 7:
+            #la carga del camion pasa al inventario de la planta para ciclo de prod
+            materia_prima_descargada = e.camion.peso - self.peso_camion_sin_carga(e.camion.tipo)
+            self.materia_prima_ciclo_prod += materia_prima_descargada
+            print ("camion %i evento: %i - materia prima: %i - RELOJ: %i" % (e.camion.nro_camion, e.tipo, self.materia_prima_ciclo_prod, self.reloj))
+            if not self.se_esta_produciendo():
+              self.producir_producto_terminado(self.reloj)
+            #el camion ahora no está cargado
+            e.camion.peso = self.peso_camion_sin_carga(e.camion.tipo)
+            e.camion.estado = e.camion.ESTADO_CAMION[1]
+
+          self.print_eventos(self.eventos_futuros)
+          print("corte")
+
+
 sim = Simulacion(3)
 sim.simular()
