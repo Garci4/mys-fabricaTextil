@@ -54,6 +54,9 @@ class Balanza:
     return self.cola_es_vacia() and self.camion_en_balanza == None
 
   def camion_a_balanza(self, camion):
+    print("--------------------------------------")
+    print("balanza: ", self.nombre)
+    print("____me metieron un camion: ", camion)
     self.camion_en_balanza = camion
 
 
