@@ -170,6 +170,7 @@ class Simulacion:
       for m in range(self.tope_reloj):
         while self.eventos_futuros != []:
           print ("---barraca: ", self.fabrica_textil.balanza_barraca.cola_camiones)
+          print ("---planta: ", self.fabrica_textil.balanza_planta.cola_camiones)
           e = self.eventos_futuros.pop(0)
           self.reloj += (e.cuando_ocurre-self.reloj)
           print("producto terminado en planta: ", self.producto_terminado_en_planta)
@@ -188,13 +189,13 @@ class Simulacion:
             self.agregar_evento(_evento)
             #print (_evento.cuando_ocurre) 
 
-          if e.tipo == 2:
-            break
-          
           #se encola en la balanza de planta  
           if e.tipo == 3:
             c = e.camion
+            bb = self.fabrica_textil.balanza_barraca
             bp = self.fabrica_textil.balanza_planta
+            if c in bb.cola_camiones:
+              d = bb.desencolar_camion() 
             bp.encolar_camion(c)
           
           #no se encola porque no hay nada en la cola, pasa derecho a la balanza
@@ -282,6 +283,9 @@ class Simulacion:
           if e.tipo == 10:
             c = e.camion
             bb = self.fabrica_textil.balanza_barraca
+            bp = self.fabrica_textil.balanza_planta
+            if c in bp.cola_camiones:
+              d = bp.desencolar_camion() 
             bb.encolar_camion(c)
           
           #no se encola porque no hay nada en la cola de la barraca, pasa derecho a la balanza

@@ -26,13 +26,12 @@ class Camion:
   '''def cargar_pesos_sin_carga(self):
     #aca se cargan los pesos de cada camión segun el tipo que le toco. Ver tabla 2'''
 
-class Balanza:
-  nombre = None
-  cola_camiones = []
-  camion_en_balanza = None
-
+class Balanza:  
   def __init__(self, nombre):
     self.nombre = nombre
+    self.cola_camiones = []
+    self.camion_en_balanza = None
+
 
   def encolar_camion(self, camion):
     #aca se agrega un camion a la cola de camiones
@@ -51,7 +50,7 @@ class Balanza:
     return self.cola_camiones == []
 
   def balanza_esta_libre(self):
-    return self.cola_es_vacia() and self.camion_en_balanza == None
+    return self.camion_en_balanza == None
 
   def camion_a_balanza(self, camion):
     print("--------------------------------------")
