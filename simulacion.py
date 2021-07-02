@@ -184,15 +184,6 @@ class Simulacion:
           _evento = Evento(c, self.reloj+tiempo_viaje, 4)
           self.agregar_evento(_evento)
           #print (_evento.cuando_ocurre) 
-
-        #se encola en la balanza de planta  
-        if e.tipo == 3:
-          c = e.camion
-          bb = self.fabrica_textil.balanza_barraca
-          bp = self.fabrica_textil.balanza_planta
-          if c in bb.cola_camiones:
-            d = bb.desencolar_camion() 
-          bp.encolar_camion(c)
         
         #no se encola porque no hay nada en la cola, pasa derecho a la balanza
         if e.tipo == 4:
@@ -206,15 +197,6 @@ class Simulacion:
           else:
             bp.encolar_camion(c)
 
-        #está encolado y es su turno para pesarse
-        if e.tipo == 5:
-          c = e.camion
-          bp = self.fabrica_textil.balanza_planta
-          bp.camion_a_balanza(c)
-          tiempo_pesado = self.calcular_tiempo_pesaje(bp.camion_en_balanza) 
-          _evento = Evento(c, self.reloj+tiempo_pesado, 6)
-          self.agregar_evento(_evento)
-        
         #fin de pesado en planta y pasa a descargar en planta
         #libero la balanza
         if e.tipo == 6:
@@ -271,19 +253,9 @@ class Simulacion:
           c.peso = self.peso_camion_sin_carga(c.tipo)
           tiempo_viaje = self.calcular_tiempo_viaje_camion(c.tipo)
           bb = self.fabrica_textil.balanza_barraca
-          print("------- BARRACA: ", bb.balanza_esta_libre())
           _evento = Evento(c, self.reloj+tiempo_viaje, 11)
           self.agregar_evento(_evento)
-
-        #fin de viaje a barraca / se encola en la balanza de planta  
-        if e.tipo == 10:
-          c = e.camion
-          bb = self.fabrica_textil.balanza_barraca
-          bp = self.fabrica_textil.balanza_planta
-          if c in bp.cola_camiones:
-            d = bp.desencolar_camion() 
-          bb.encolar_camion(c)
-        
+       
         #no se encola porque no hay nada en la cola de la barraca, pasa derecho a la balanza
         if e.tipo == 11:
           c = e.camion
@@ -295,16 +267,6 @@ class Simulacion:
             self.agregar_evento(_evento)
           else:
             bb.encolar_camion(c)
-        
-        #está encolado en la cola de la barraca y es su turno para pesarse
-        if e.tipo == 12:
-          print ("Estoy en 2222222222222222222")
-          c = e.camion
-          bb = self.fabrica_textil.balanza_barraca
-          bb.camion_a_balanza(c)
-          tiempo_pesado = self.calcular_tiempo_pesaje(bb.camion_en_balanza) 
-          _evento = Evento(c, self.reloj+tiempo_pesado, 13)
-          self.agregar_evento(_evento)
 
         #fin de pesado e inicio de carga en la barraca de materia prima
         if e.tipo == 13:
@@ -313,7 +275,7 @@ class Simulacion:
           bb.camion_en_balanza = None
           print ("La cola de camiones en 13 es", bb.cola_camiones)
           if bb.cola_es_vacia() == False:
-            _evento = Evento(bb.desencolar_camion(), self.reloj, 12)
+            _evento = Evento(bb.desencolar_camion(), self.reloj, 11)
             self.agregar_evento(_evento)
           _nuevo_peso = self.calcular_pesaje_segun_tipo_camion(c.tipo)
           cantidad_materia_prima = _nuevo_peso - c.peso
