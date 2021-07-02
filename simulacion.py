@@ -29,6 +29,12 @@ class Evento:
     self.cuando_ocurre = cuando_ocurre
     self.tipo = tipo
 
+  def __str__(self, camion):
+    if camion is not None:
+      return ("E -> Ocurre en: %i - Tipo %i - Camion %i" % (self.cuando_ocurre, self.tipo, self.camion.nro_camion))
+    else:  
+      return ("E -> Ocurre en: %i - Tipo %i" % (self.cuando_ocurre, self.tipo))
+
 class Simulacion:
 
   fabrica_textil = None
@@ -39,6 +45,7 @@ class Simulacion:
   delta = 1
   reloj = None
   tope_reloj = HS_TRABAJO_X_DIA * DIAS * 60
+  #tope_reloj = 500
 
   #Tiempo que toma completar un ciclo de produccion en minutos
   TIEMPO_PRODUCCION = 10
@@ -117,11 +124,9 @@ class Simulacion:
       c.peso = self.calcular_pesaje_segun_tipo_camion(c.tipo)
       demora = self.calcular_demora_carga_camion(c.tipo)
       demora_total += demora
-      print ("camion: %i -- peso: %i -- demora: %i --- Demora total: %i" % (c.nro_camion, c.peso, demora, demora_total))
       e = Evento(c, demora_total, 1)
-      print ("evento cuando ocurre: %i -- tipo: %i" % (e.cuando_ocurre, e.tipo))
+      print ("INICIO SIMULACION")
       eventos.append(e)
-    
     return eventos
 
   #Recibe un tipo de camion y devuelve su tiempo de viaje
@@ -141,11 +146,8 @@ class Simulacion:
 
   #metodo que imprime la lista de eventos en un formato que nos gusta
   def print_eventos(self, eventos):
-          for i in eventos:
-            if i.camion is not None:
-              print("camion: %i - evento: %i - ocurre en: %i" %(i.camion.nro_camion, i.tipo, i.cuando_ocurre))
-            else:
-              print("99999999999 evento: %i - ocurre en: %i" %(i.tipo, i.cuando_ocurre))
+    for i in eventos:
+      print (i.__str__(i.camion))
 
   def producir_producto_terminado_en_planta(self, ahora):
     if self.materia_prima_ciclo_prod >= 1.1:
@@ -164,17 +166,19 @@ class Simulacion:
 
   def simular(self):
     self.eventos_futuros = self.inicio_simulacion(self.fabrica_textil.camiones)
+    self.print_eventos(self.eventos_futuros)
     self.reloj = 0
     for a in range(1):
       #inicializo las variables de los tiempos para este anio
       while self.eventos_futuros != [] and self.tope_reloj >= self.reloj:
-        print ("---barraca: ", self.fabrica_textil.balanza_barraca.cola_camiones)
-        print ("---planta: ", self.fabrica_textil.balanza_planta.cola_camiones)
         e = self.eventos_futuros.pop(0)
         self.reloj += (e.cuando_ocurre-self.reloj)
+        print("-------------------------------------------------------------------------------")
+        print("RELOJ: ", self.reloj)
         print("producto terminado en planta: ", self.producto_terminado_en_planta)
         print("materia prima en barraca: ", self.materia_prima_barraca)
         print("producto terminado centro dist: ", self.producto_terminado_en_centro_dist)
+        print("-------------------------------------------------------------------------------")
         if e.tipo == 99:
           self.producir_producto_terminado_en_planta(self.reloj)
         if e.tipo == 1:
@@ -215,7 +219,6 @@ class Simulacion:
           #la carga del camion pasa al inventario de la planta para ciclo de prod
           materia_prima_descargada = e.camion.peso - self.peso_camion_sin_carga(e.camion.tipo)
           self.materia_prima_ciclo_prod += materia_prima_descargada
-          print ("camion %i - peso %i - evento: %i - materia prima: %i - RELOJ: %i" % (e.camion.nro_camion, e.camion.peso, e.tipo, self.materia_prima_ciclo_prod, self.reloj))
           if not self.se_esta_produciendo():
             self.producir_producto_terminado_en_planta(self.reloj)
           #el camion ahora no está cargado
@@ -225,7 +228,6 @@ class Simulacion:
           _peso_nuevo = self.calcular_pesaje_segun_tipo_camion(e.camion.tipo)
           #cptc = cantidad producto terminado a cargar
           cptc = _peso_nuevo - e.camion.peso
-          print ("prod terminado= %i cptc= %i" % (self.producto_terminado_en_planta, cptc))
           if cptc <= self.producto_terminado_en_planta:
             self.producto_terminado_en_planta -= cptc
             e.camion.peso = _peso_nuevo
@@ -273,7 +275,6 @@ class Simulacion:
           c = e.camion
           bb = self.fabrica_textil.balanza_barraca
           bb.camion_en_balanza = None
-          print ("La cola de camiones en 13 es", bb.cola_camiones)
           if bb.cola_es_vacia() == False:
             _evento = Evento(bb.desencolar_camion(), self.reloj, 11)
             self.agregar_evento(_evento)
@@ -298,8 +299,6 @@ class Simulacion:
         self.print_eventos(self.eventos_futuros)
         print("corte")
 
-          
 
-
-sim = Simulacion(3)
+sim = Simulacion(20)
 sim.simular()

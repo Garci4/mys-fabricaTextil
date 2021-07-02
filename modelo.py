@@ -23,6 +23,13 @@ class Camion:
     if estado in range(1,5):
       self.estado = self.ESTADO_CAMION[estado]
 
+  
+  def __str__(self):
+    return ("Camion %i -> tipo %i - peso %i" % (self.nro_camion, self.tipo, self.peso))
+
+  def __repr__(self):
+    return ("Camion %i -> tipo %i - peso %i" % (self.nro_camion, self.tipo, self.peso))
+
   '''def cargar_pesos_sin_carga(self):
     #aca se cargan los pesos de cada camión segun el tipo que le toco. Ver tabla 2'''
 
@@ -53,9 +60,6 @@ class Balanza:
     return self.camion_en_balanza == None
 
   def camion_a_balanza(self, camion):
-    print("--------------------------------------")
-    print("balanza: ", self.nombre)
-    print("____me metieron un camion: ", camion)
     self.camion_en_balanza = camion
 
 
