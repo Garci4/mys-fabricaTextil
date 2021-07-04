@@ -1,6 +1,8 @@
 from modelo import Camion, Balanza, FabricaTextil
 
 import sys
+import matplotlib.pyplot as plt
+import seaborn as sns
 
 #Distribuciones
 from scipy.stats import uniform
@@ -89,7 +91,8 @@ class Simulacion:
       return 28
     if tipo_camion == 4:
       return 35 
-
+  
+  #tabla 1
   def peso_camion_sin_carga(self, tipo_camion):
     if tipo_camion == 1:
       return 31
@@ -103,9 +106,9 @@ class Simulacion:
   #tabla 2 - No se permite que el peso del camion sea menor al peso del camion sin carga
   def calcular_pesaje_segun_tipo_camion(self, tipo_camion):
     if tipo_camion == 1:
-      _peso = round(norm.rvs(loc=32, scale=6.2))
+      _peso = round(norm.rvs(loc=34, scale=6.2))
       while _peso < self.peso_camion_sin_carga(tipo_camion):
-        _peso = round(norm.rvs(loc=32, scale=6.2))
+        _peso = round(norm.rvs(loc=34, scale=6.2))
       return _peso
     if tipo_camion == 2:
       _peso = round(norm.rvs(loc=27.5, scale=4.5))
@@ -200,6 +203,15 @@ class Simulacion:
       'balanza_barraca': promedio_bb
     }
 
+  def _promedio_anual_balanzas_ociosas(self):
+    meses_trabajados = self.tope_reloj/(self.dia_trabajo_completo*300)
+    promedio_bb = self.tmr_balanza_barraca_libre/meses_trabajados
+    promedio_bp = self.tmr_balanza_planta_libre/meses_trabajados
+    return {
+      'balanza_planta': promedio_bp,
+      'balanza_barraca': promedio_bb
+    }
+
   def simular(self):
     self.eventos_futuros = self.inicio_simulacion(self.fabrica_textil.camiones)
     self.print_eventos(self.eventos_futuros)
@@ -238,7 +250,7 @@ class Simulacion:
             _evento = Evento(c, self.reloj+tiempo_pesado, 6)
             self.agregar_evento(_evento)
           else:
-            bp.encolar_camion(c)
+            bp.encolar_camion(c) #evento 3, camion se encola porque la balanza esta ocupada
 
         #fin de pesado en planta y pasa a descargar en planta
         #libero la balanza
@@ -339,7 +351,10 @@ class Simulacion:
         print("corte")
           
     #aca van las estadísiticas
-    print (self._promedio_diario_balanzas_ociosas())
+    print ("El promedio de balanzas ociosas diario es: ",self._promedio_diario_balanzas_ociosas())
+    print ("El promedio de balanzas ociosas mensual es: ",self._promedio_mensual_balanzas_ociosas())
+    print ("El promedio de balanzas ociosas anual es: ",self._promedio_anual_balanzas_ociosas())
 
-sim = Simulacion(3)
+sim = Simulacion(1)
 sim.simular()
+
