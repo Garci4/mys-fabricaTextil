@@ -39,18 +39,27 @@ class Simulacion:
 
   fabrica_textil = None
 
-  DIAS = 300
+  DIAS = 50
   HS_TRABAJO_X_DIA = 15
   #delta indica cuanto es el avance del reloj y reloj va a llevar el avance del tiempo
   delta = 1
   reloj = None
+  avance_reloj = None
   tope_reloj = HS_TRABAJO_X_DIA * DIAS * 60
+  dia_trabajo_completo = HS_TRABAJO_X_DIA * 60
   #tope_reloj = 500
 
   #Tiempo que toma completar un ciclo de produccion en minutos
   TIEMPO_PRODUCCION = 10
   
-  tmr_balanzas_libres = None
+  tmr_balanza_planta_libre = 0
+  aux_tmr_balanza_planta_libre = 0
+  flag_balanza_planta_libre = True
+
+  tmr_balanza_barraca_libre = 0
+  aux_tmr_balanza_barraca_libre = 0
+  flag_balanza_barraca_libre = True
+  
   tmr_espera_camiones_en_cola = None
   nro_puntos_criticos_alcanzados = None
 
@@ -91,7 +100,7 @@ class Simulacion:
     if tipo_camion == 4:
       return 45 
 
-  #tabla 2
+  #tabla 2 - No se permite que el peso del camion sea menor al peso del camion sin carga
   def calcular_pesaje_segun_tipo_camion(self, tipo_camion):
     if tipo_camion == 1:
       _peso = round(norm.rvs(loc=32, scale=6.2))
@@ -164,6 +173,33 @@ class Simulacion:
       else:
         return False
 
+  def _balanzas_ociosas(self, avance_reloj):
+    if self.fabrica_textil.balanza_barraca.balanza_esta_libre():
+      print("balanza libre: ", self.fabrica_textil.balanza_barraca.balanza_esta_libre())
+      self.tmr_balanza_barraca_libre += avance_reloj
+      
+    if self.fabrica_textil.balanza_planta.balanza_esta_libre():
+      print("planta libre: ", self.fabrica_textil.balanza_planta.balanza_esta_libre())
+      self.tmr_balanza_planta_libre += avance_reloj
+      
+  def _promedio_diario_balanzas_ociosas(self):
+    dias_trabajados = self.tope_reloj/self.dia_trabajo_completo
+    promedio_bb = self.tmr_balanza_barraca_libre/dias_trabajados
+    promedio_bp = self.tmr_balanza_planta_libre/dias_trabajados
+    return {
+      'balanza_planta': promedio_bp,
+      'balanza_barraca': promedio_bb
+    }
+
+  def _promedio_mensual_balanzas_ociosas(self):
+    meses_trabajados = self.tope_reloj/(self.dia_trabajo_completo*25)
+    promedio_bb = self.tmr_balanza_barraca_libre/meses_trabajados
+    promedio_bp = self.tmr_balanza_planta_libre/meses_trabajados
+    return {
+      'balanza_planta': promedio_bp,
+      'balanza_barraca': promedio_bb
+    }
+
   def simular(self):
     self.eventos_futuros = self.inicio_simulacion(self.fabrica_textil.camiones)
     self.print_eventos(self.eventos_futuros)
@@ -172,9 +208,14 @@ class Simulacion:
       #inicializo las variables de los tiempos para este anio
       while self.eventos_futuros != [] and self.tope_reloj >= self.reloj:
         e = self.eventos_futuros.pop(0)
-        self.reloj += (e.cuando_ocurre-self.reloj)
+        self.avance_reloj = (e.cuando_ocurre-self.reloj) 
+        self.reloj += self.avance_reloj
         print("-------------------------------------------------------------------------------")
+        self._balanzas_ociosas(self.avance_reloj) 
+        print("Avance Reloj: ", self.avance_reloj)
         print("RELOJ: ", self.reloj)
+        print("BP libre: ", self.tmr_balanza_planta_libre)
+        print("BB libre: ", self.tmr_balanza_barraca_libre)
         print("producto terminado en planta: ", self.producto_terminado_en_planta)
         print("materia prima en barraca: ", self.materia_prima_barraca)
         print("producto terminado centro dist: ", self.producto_terminado_en_centro_dist)
@@ -184,16 +225,14 @@ class Simulacion:
         if e.tipo == 1:
           c = e.camion 
           tiempo_viaje = self.calcular_tiempo_viaje_camion(c.tipo)
-          bp = self.fabrica_textil.balanza_planta
           _evento = Evento(c, self.reloj+tiempo_viaje, 4)
           self.agregar_evento(_evento)
-          #print (_evento.cuando_ocurre) 
         
         #no se encola porque no hay nada en la cola, pasa derecho a la balanza
         if e.tipo == 4:
           c = e.camion
           bp = self.fabrica_textil.balanza_planta
-          if bp.balanza_esta_libre() :
+          if bp.balanza_esta_libre():
             bp.camion_a_balanza(c)
             tiempo_pesado = self.calcular_tiempo_pesaje(bp.camion_en_balanza)  
             _evento = Evento(c, self.reloj+tiempo_pesado, 6)
@@ -298,7 +337,9 @@ class Simulacion:
 
         self.print_eventos(self.eventos_futuros)
         print("corte")
+          
+    #aca van las estadísiticas
+    print (self._promedio_diario_balanzas_ociosas())
 
-
-sim = Simulacion(20)
+sim = Simulacion(3)
 sim.simular()
