@@ -1,4 +1,6 @@
 import random
+import numpy as np
+
 
 class Camion:
   nro_camion = 0
