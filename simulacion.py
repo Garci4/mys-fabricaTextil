@@ -46,7 +46,7 @@ class Simulacion:
 
   fabrica_textil = None
 
-  DIAS = 20
+  DIAS = 50
   HS_TRABAJO_X_DIA = 15
   #delta indica cuanto es el avance del reloj y reloj va a llevar el avance del tiempo
   delta = 1
@@ -54,21 +54,23 @@ class Simulacion:
   avance_reloj = None
   tope_reloj = HS_TRABAJO_X_DIA * DIAS * 60
   dia_trabajo_completo = HS_TRABAJO_X_DIA * 60
-  mes_trabajo_completo =dia_trabajo_completo * 10
+  mes_trabajo_completo = dia_trabajo_completo * 10
   meses = 0
+  reloj_meses = 0
   #tope_reloj = 500
 
   #Tiempo que toma completar un ciclo de produccion en minutos
   TIEMPO_PRODUCCION = 10
   
+
+  '''ESTAS VARIABLES TIENEN LA CANTIDAD TOTAL DE MINUTOS QUE LAS BALANZAS ESTUVIERON OCIOSAS'''
   tmr_balanza_planta_libre = 0
   aux_tmr_balanza_planta_libre = 0
-  flag_balanza_planta_libre = True
 
   tmr_balanza_barraca_libre = 0
   aux_tmr_balanza_barraca_libre = 0
-  flag_balanza_barraca_libre = True
-
+  
+  '''ACA SE ARMA LA LISTA PARA LOS GRAFICOS'''
   balanza_barraca_libre_por_mes = []
   balanza_planta_libre_por_mes = []
   
@@ -213,14 +215,25 @@ class Simulacion:
       'balanza_barraca': promedio_bb
     }
 
+  '''Este método guarda en las listas de abajo '''
   def _agregar_datos_estadísticos(self):
-    self.balanza_planta_libre_por_mes.append(self.reloj-self.tmr_balanza_planta_libre)
-    self.balanza_barraca_libre_por_mes.append(self.reloj-self.tmr_balanza_barraca_libre)
+    bplpm = self.balanza_planta_libre_por_mes
+    if len(bplpm)>1:
+      anterior_planta = bplpm[len(bplpm)-1]
+      bplpm.append((self.reloj-self.tmr_balanza_planta_libre)-anterior_planta)
+    else:
+      bplpm.append(self.reloj-self.tmr_balanza_planta_libre)
+
+    bblpm = self.balanza_barraca_libre_por_mes
+    if len(bblpm)>1:
+      anterior_barraca = bblpm[len(bblpm)-1]
+      bblpm.append((self.reloj-self.tmr_balanza_barraca_libre)-anterior_barraca)
+    else:
+      bblpm.append(self.reloj-self.tmr_balanza_planta_libre)
 
   def _promedio_anual_balanzas_ociosas(self):
-    meses_trabajados = self.tope_reloj/(self.dia_trabajo_completo*300)
-    promedio_bb = self.tmr_balanza_barraca_libre/meses_trabajados
-    promedio_bp = self.tmr_balanza_planta_libre/meses_trabajados
+    promedio_bb = self.tmr_balanza_barraca_libre/self.tope_reloj
+    promedio_bp = self.tmr_balanza_planta_libre/self.tope_reloj
     return {
       'balanza_planta': promedio_bp,
       'balanza_barraca': promedio_bb
@@ -230,21 +243,29 @@ class Simulacion:
     self.eventos_futuros = self.inicio_simulacion(self.fabrica_textil.camiones)
     self.print_eventos(self.eventos_futuros)
     self.reloj = 0
+    self.reloj_meses = 0
     for a in range(1):
       #inicializo las variables de los tiempos para este anio
       while self.eventos_futuros != [] and self.tope_reloj >= self.reloj:
         e = self.eventos_futuros.pop(0)
         self.avance_reloj = (e.cuando_ocurre-self.reloj) 
-        if (self.reloj/self.meses > self.mes_trabajo_completo)
-        if self.avance_reloj > 0 and (self.reloj % self.mes_trabajo_completo) == 0:
-          print("RELOJ: ", self.reloj)
+        print("-------------------------------------------------------------------------------")
+        print("RELOJ: ", self.reloj)
+        #Si el avance del reloj son 50 minutos y el reloj_meses se pasa de un mes reseteo reloj_meses y cuento que paso un mes 
+        if self.avance_reloj < 10 and self.reloj_meses+15 > self.mes_trabajo_completo:
+          print ("PASO UN MES")
+          print (self.reloj_meses)
+          print (self.mes_trabajo_completo)
           self.meses += 1
           self._agregar_datos_estadísticos()
+          self.reloj_meses = 0
         self.reloj += self.avance_reloj
-        print("-------------------------------------------------------------------------------")
+        self.reloj_meses += self.avance_reloj
         self._balanzas_ociosas(self.avance_reloj)          
         print("Avance Reloj: ", self.avance_reloj)
         print("RELOJ: ", self.reloj)
+        print("Reloj meses: ",self.reloj_meses)
+        print("Mes trabajo completo ",self.mes_trabajo_completo)
         print("BP libre: ", self.tmr_balanza_planta_libre)
         print("BB libre: ", self.tmr_balanza_barraca_libre)
         print("producto terminado en planta: ", self.producto_terminado_en_planta)
@@ -372,11 +393,12 @@ class Simulacion:
     #aca van las estadísiticas
     print (self._promedio_diario_balanzas_ociosas())
     print (self.meses)
+    print (self.balanza_planta_libre_por_mes)
     print (self.balanza_barraca_libre_por_mes)
     print ("El promedio de balanzas ociosas diario es: ",self._promedio_diario_balanzas_ociosas())
     print ("El promedio de balanzas ociosas mensual es: ",self._promedio_mensual_balanzas_ociosas())
     print ("El promedio de balanzas ociosas anual es: ",self._promedio_anual_balanzas_ociosas())
 
-sim = Simulacion(1)
+sim = Simulacion(3)
 sim.simular()
 
