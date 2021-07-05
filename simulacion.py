@@ -391,14 +391,31 @@ class Simulacion:
         self.print_eventos(self.eventos_futuros)
         print("corte")
           
+    def crear_txt(self):
+      with open('estadisticas.txt','w') as texto:
+        for item in self.balanza_barraca_libre_por_mes:
+          texto.write("El promedio mensual de la balanza barraca ociosa mensual es %s\n" % item)
+        for item in self.balanza_planta_libre_por_mes:
+          texto.write("El promedio mensual de la balanza planta ociosa mensual es %s\n" % item)
+        texto.close()
+      #archivo_texto=open("estadisticas.txt","w")
+      #archivo_texto.write('El promedio de balanza barraca ociosa diario es: ',)
+      #archivo_texto.write('\nEl promedio de balanza planta ociosa diario es: ')
+      #archivo_texto.write('\n--------------------------------------------------------------------------------')
+      #archivo_texto.write('\nEl promedio de balanza barraca ociosa mensual es: ', (self.balanza_barraca_libre_por_mes))
+      #archivo_texto.write('\nEl promedio de balanza planta ociosa mensual es: ',self.balanza_planta_libre_por_mes)
+      #archivo_texto.close()
+
     #aca van las estadísiticas
     print (self._promedio_diario_balanzas_ociosas())
-    print ("Pasaron ",self.meses," meses")
-    print (self.balanza_planta_libre_por_mes)
-    print (self.balanza_barraca_libre_por_mes)
-    print ("El promedio de balanzas ociosas diario es: ",self._promedio_diario_balanzas_ociosas())
-    print ("El promedio de balanzas ociosas mensual es: ",self._promedio_mensual_balanzas_ociosas())
-    print ("El promedio de balanzas ociosas anual es: ",self._promedio_anual_balanzas_ociosas())
+    print ("Pasaron ",self.meses," meses \n")
+    print ("\nEl promedio de balanza planta ociosa mensual es: ", self.balanza_planta_libre_por_mes)
+    print ("\n El promedio de balanza barraca ociosa mensual es: ", self.balanza_barraca_libre_por_mes)
+    print ("\nEl promedio de balanzas ociosas diario es: ",self._promedio_diario_balanzas_ociosas())
+    print ("\nEl promedio de balanzas ociosas mensual es: ",self._promedio_mensual_balanzas_ociosas())
+    print ("\nEl promedio de balanzas ociosas anual es: ",self._promedio_anual_balanzas_ociosas())
+
+    crear_txt(self)
 
     #grafico de barras tiempo ocioso balanza barraca 
     pyplot.bar(range(5),self.balanza_barraca_libre_por_mes)
