@@ -6,7 +6,6 @@ import pandas as pd
 import numpy as numpy
 
 import sys
-import matplotlib.pyplot as plt
 import seaborn as sns
 
 #Distribuciones
@@ -48,6 +47,7 @@ class Simulacion:
 
   DIAS = 50
   HS_TRABAJO_X_DIA = 15
+  meses_contados = []
   #delta indica cuanto es el avance del reloj y reloj va a llevar el avance del tiempo
   delta = 1
   reloj = None
@@ -257,6 +257,7 @@ class Simulacion:
           print (self.reloj_meses)
           print (self.mes_trabajo_completo)
           self.meses += 1
+          self.meses_contados.append(self.meses)
           self._agregar_datos_estadísticos()
           self.reloj_meses = 0
         self.reloj += self.avance_reloj
@@ -392,12 +393,28 @@ class Simulacion:
           
     #aca van las estadísiticas
     print (self._promedio_diario_balanzas_ociosas())
-    print (self.meses)
+    print ("Pasaron ",self.meses," meses")
     print (self.balanza_planta_libre_por_mes)
     print (self.balanza_barraca_libre_por_mes)
     print ("El promedio de balanzas ociosas diario es: ",self._promedio_diario_balanzas_ociosas())
     print ("El promedio de balanzas ociosas mensual es: ",self._promedio_mensual_balanzas_ociosas())
     print ("El promedio de balanzas ociosas anual es: ",self._promedio_anual_balanzas_ociosas())
+
+    #grafico de barras tiempo ocioso balanza barraca 
+    pyplot.bar(range(5),self.balanza_barraca_libre_por_mes)
+    pyplot.xticks(range(self.meses),self.meses_contados)
+    pyplot.title("Grafico de barras balanza barraca libre por mes")
+    pyplot.ylim(min(self.balanza_barraca_libre_por_mes) - 1, max(self.balanza_barraca_libre_por_mes)+1)
+    pyplot.savefig('Balanza Barraca libre.pdf')
+    pyplot.show()
+
+    #grafico de barras tiempo ocioso balanza planta
+    pyplot.bar(range(5),self.balanza_planta_libre_por_mes)
+    pyplot.xticks(range(self.meses),self.meses_contados)
+    pyplot.title("Grafico de barras balanza planta libre por mes")
+    pyplot.ylim(min(self.balanza_planta_libre_por_mes) - 1, max(self.balanza_planta_libre_por_mes)+1)
+    pyplot.savefig('Balanza Planta libre.pdf')
+    pyplot.show()
 
 sim = Simulacion(3)
 sim.simular()
